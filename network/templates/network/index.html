@@ -1,0 +1,393 @@
+{% extends "network/layout.html" %}
+{% block body %}
+<style>
+    /* Modal stability styles */
+    .modal {
+        z-index: 1050;
+        position: fixed;
+    }
+    .modal-backdrop {
+        z-index: 1040;
+    }
+
+    /* Existing styles from original file */
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f3f4f6;
+        margin: 0;
+        padding: 0;
+    }
+    .new-post-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+    .new-post-box {
+        width: 100%;
+        max-width: 600px;
+        background-color: #f9f9f9;
+        border: 1px solid #ddd;
+        border-radius: 10px;
+        padding: 15px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        transition: all 0.3s ease;
+    }
+    .new-post-box:hover {
+        box-shadow: 0 6px 10px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+    }
+    textarea {
+        width: 100%;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        padding: 10px;
+        font-size: 16px;
+        resize: none;
+        transition: border-color 0.3s;
+        outline: none;
+        color: #333;
+    }
+    textarea::placeholder {
+        color: #aaa;
+        font-style: italic;
+    }
+    textarea:focus {
+        border-color: #0073b1;
+        box-shadow: 0 0 4px rgba(0, 115, 177, 0.5);
+    }
+    button {
+        display: inline-block;
+        background-color: #0073b1;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        padding: 10px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        margin-top: 10px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+    button:hover {
+        background-color: #005b8e;
+    }
+    button:active {
+        transform: scale(0.98);
+    }
+    .container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 10px;
+    }
+    .post-card {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        padding: 15px 20px;
+        animation: fadeIn 0.5s ease-in-out;
+        position: relative;
+    }
+    .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease-in-out;
+    }
+    .post-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .post-header img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+    .post-header .username {
+        font-weight: bold;
+        color: #333;
+    }
+    .post-header .timestamp {
+        font-size: 0.85em;
+        color: #666;
+    }
+    .post-content {
+        font-size: 1em;
+        color: #444;
+        line-height: 1.5;
+        margin-bottom: 10px;
+    }
+    .post-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9em;
+        color: #555;
+    }
+    .like-button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .like-button:hover {
+        background-color: #0056b3;
+    }
+    .likes-count {
+        font-size: 0.9em;
+        font-weight: bold;
+        margin-left: 5px;
+    }
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    .pagination {
+        display: flex;
+        justify-content: center;
+        padding: 15px;
+        gap: 8px;
+        list-style: none;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+    .pagination .page-item {
+        position: relative;
+    }
+    .pagination .page-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 14px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: bold;
+        text-decoration: none;
+        color: #007bff;
+        background-color: #f3f4f6;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.3s ease;
+    }
+    .pagination .page-link:hover {
+        background-color: #007bff;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+    .pagination .page-item.active .page-link {
+        background-color: #007bff;
+        color: #ffffff;
+        cursor: default;
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.5);
+    }
+    .pagination .page-link:focus {
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.3);
+    }
+    .pagination .page-item.disabled .page-link {
+        color: #b3b3b3;
+        cursor: not-allowed;
+        background-color: #f0f0f0;
+    }
+    .pagination .page-link::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        background-color: #007bff;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+        transform: translateX(-50%);
+    }
+    .pagination .page-link:hover::after {
+        width: 50%;
+    }
+</style>
+
+<center>
+    <h1>All Posts</h1>
+</center>
+  
+{% if user.is_authenticated %}
+<form action="{% url 'newPost' %}" method="post">
+    {% csrf_token %}
+    <div class="new-post-container">
+        <div class="new-post-box">
+            <textarea id="postTextarea" name="content" rows="3"></textarea>
+            <button type="submit" id="postButton">Post</button>
+        </div>
+    </div>
+</form>
+{% endif %}
+
+<div class="container">
+    {% for post in postsInPage %}
+    <div class="post-card">
+        <div class="post-header">
+            <img src="./static/network/avatar.jpeg" alt="User Avatar">
+            <div>
+                <div class="username"><a href="{% url 'profile' user_id=post.user.id%}" style="text-decoration: none;">@{{ post.user }}</a></div>
+                <div class="timestamp">{{ post.date }}</div>
+            </div>
+        </div>
+        <div id="content_{{ post.id }}" class="post-content">
+            {{ post.content }}
+        </div>
+        
+        <div class="post-footer">
+            {% if user.is_authenticated %}
+                {% if user == post.user %}
+                <div>
+                    <button 
+                        class="like-button edit-post-btn" 
+                        onclick="openEditModal('{{ post.id }}', `{{ post.content|escapejs }}`)"
+                    >Edit</button>
+                </div>
+                {% else %}
+                <button class="like-button" data-post-id="{{ post.id }}">
+                    Like
+                </button>
+                {% endif %}
+            {% endif %}
+           
+            <span class="likes-count">
+                {% if post.likes is not None %}
+                    {{ post.likes }}
+                {% else %}
+                    0
+                {% endif %}
+                Likes
+            </span>
+        </div>
+    </div>
+    {% empty %}
+    <center>
+        <p>No posts available yet. Start posting!</p>
+    </center>
+    {% endfor %}
+</div>
+
+{% for post in postsInPage %}
+<!-- Single Modal Template -->
+<div class="modal fade" id="editPostModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Post</h5>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <form id="editPostForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <textarea class="form-control" name="content" id="editPostContent" rows="3"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary" onclick="submitHandler('{{ post.id }}')">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% if postsInPage.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ postsInPage.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+
+        {% if postsInPage.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ postsInPage.next_page_number }}">Next</a>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+
+<script>
+    // Placeholder and textarea script
+    const textarea = document.getElementById("postTextarea");
+    const button = document.getElementById("postButton");
+
+    const placeholderTexts = [
+        "What's cooking, good looking?",
+        "Share your genius with the world!",
+        "Got a hot take? Spill it!",
+        "Write something so profound it breaks the internet!",
+        "Feeling witty? Let's hear it!",
+        "The stage is yours—what's the headline?",
+        "What's tickling your brain today?",
+        "Drop your mic moment right here!",
+    ];
+
+    const randomPlaceholder = placeholderTexts[Math.floor(Math.random() * placeholderTexts.length)];
+    textarea.placeholder = randomPlaceholder;
+
+    textarea.addEventListener("input", () => {
+        if (textarea.value.trim() !== "") {
+            button.style.backgroundColor = "#005b8e";
+            button.disabled = false;
+        } else {
+            button.style.backgroundColor = "#0073b1";
+            button.disabled = true;
+        }
+    });
+
+    // Modal handling script
+    function openEditModal(postId, currentContent) {
+        // Set form action dynamically
+        //const form = document.getElementById('editPostForm');
+        //form.action = `/edit_post/${postId}`;
+        
+        // Populate textarea with current content
+        const contentTextarea = document.getElementById('editPostContent');
+        contentTextarea.value = currentContent;
+        
+        // Manually show modal to avoid potential conflicts
+        $('#editPostModal').modal('show');
+    }
+
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+
+        if (parts.length == 2) return parts.pop().split(';').shift();
+    }
+
+    function submitHandler(id) {
+        const textarea = document.getElementById('editPostContent').value;
+        const content = document.getElementById(`content_${id}`);
+        const modal = document.getElementById(`editPostModal`);
+        console.log(textarea);
+        fetch(`/edit/${id}`, {
+            method: "POST",
+            headers: {"Content-type": "application/json", "X-CSRFToken": getCookie("csrftoken")},
+            body: JSON.stringify({
+                content: textarea
+            })
+        })
+        .then(response => response.json())
+        .then(result => 
+            content.innerHTML = result.data
+        )
+    }
+</script>
+{% endblock %}

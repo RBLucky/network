@@ -1,0 +1,221 @@
+{% extends "network/layout.html" %} {% block body %}
+
+<style>
+    /* General styles */
+    body {
+        font-family: 'Arial', sans-serif;
+        background-color: #f3f4f6;
+        margin: 0;
+        padding: 0;
+    }
+    .container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 10px;
+    }
+    .post-card {
+        background-color: #fff;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+        padding: 15px 20px;
+        animation: fadeIn 0.5s ease-in-out;
+        position: relative;
+    }
+    .post-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.15);
+        transition: all 0.3s ease-in-out;
+    }
+    .post-header {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    .post-header img {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-right: 10px;
+    }
+    .post-header .username {
+        font-weight: bold;
+        color: #333;
+    }
+    .post-header .timestamp {
+        font-size: 0.85em;
+        color: #666;
+    }
+    .post-content {
+        font-size: 1em;
+        color: #444;
+        line-height: 1.5;
+        margin-bottom: 10px;
+    }
+    .post-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.9em;
+        color: #555;
+    }
+    .like-button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 6px 12px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+    }
+    .like-button:hover {
+        background-color: #0056b3;
+    }
+    .likes-count {
+        font-size: 0.9em;
+        font-weight: bold;
+        margin-left: 5px;
+    }
+
+    /* Animation */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Pagination Styles */
+    .pagination {
+        display: flex;
+        justify-content: center;
+        padding: 15px;
+        gap: 8px;
+        list-style: none;
+        background-color: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .pagination .page-item {
+        position: relative;
+    }
+
+    .pagination .page-link {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 14px;
+        border: none;
+        border-radius: 8px;
+        font-size: 1rem;
+        font-weight: bold;
+        text-decoration: none;
+        color: #007bff;
+        background-color: #f3f4f6;
+        cursor: pointer;
+        transition: transform 0.2s ease, background-color 0.3s ease;
+    }
+
+    .pagination .page-link:hover {
+        background-color: #007bff;
+        color: #ffffff;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+    }
+
+    .pagination .page-item.active .page-link {
+        background-color: #007bff;
+        color: #ffffff;
+        cursor: default;
+        box-shadow: 0 4px 12px rgba(0, 123, 255, 0.5);
+    }
+
+    .pagination .page-link:focus {
+        outline: none;
+        box-shadow: 0 0 0 4px rgba(0, 123, 255, 0.3);
+    }
+
+    .pagination .page-item.disabled .page-link {
+        color: #b3b3b3;
+        cursor: not-allowed;
+        background-color: #f0f0f0;
+    }
+
+    .pagination .page-link::after {
+        content: '';
+        position: absolute;
+        bottom: -4px;
+        left: 50%;
+        width: 0;
+        height: 2px;
+        background-color: #007bff;
+        border-radius: 4px;
+        transition: width 0.3s ease;
+        transform: translateX(-50%);
+    }
+
+    .pagination .page-link:hover::after {
+        width: 50%;
+    }
+</style>
+<div class="container">
+    <center style="margin-bottom: 10px;">
+        <h1>Following</h1>
+    </center>
+    
+    {% for post in postsInPage %}
+    <div class="post-card">
+        <div class="post-header">
+            <img src="./static/network/avatar.jpeg" alt="User Avatar">
+            <div>
+                <div class="username"><a href="{% url 'profile' user_id=post.user.id%}" style="text-decoration: none;">@{{ post.user }}</a></div>
+                <div class="timestamp">{{ post.date }}</div>
+            </div>
+        </div>
+        <div class="post-content">
+            {{ post.content }}
+        </div>
+        <div class="post-footer">
+            <button class="like-button" data-post-id="{{ post.id }}">
+                Like
+            </button>
+            <span class="likes-count">
+                {% if post.likes is not None %}
+                    {{ post.likes }}
+                {% else %}
+                    0
+                {% endif %}
+                Likes
+            </span>
+        </div>
+    </div>
+    {% empty %}
+    <center>
+        <p>No posts available yet. Start posting!</p>
+    </center>
+    {% endfor %}
+</div>
+
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        {% if postsInPage.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ postsInPage.previous_page_number }}">Previous</a>
+        </li>
+        {% endif %}
+
+        {% if postsInPage.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?page={{ postsInPage.next_page_number }}">Next</a>
+        </li>
+        {% endif %}
+        
+    </ul>
+</nav>
+
+{% endblock %}
