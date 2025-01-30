@@ -13,14 +13,16 @@ def unlike(request, post_id):
     user = User.objects.get(pk=request.user.id)
     like = Like.objects.filter(user=user, post=post)
     like.delete()
-    return JsonResponse({"message": "Like deleted successfully!"})
+
+    return JsonResponse({"message": "Like deleted successfully!", "likes": post.likes})
 
 def like(request, post_id):
     post = Post.objects.get(pk=post_id)
     user = User.objects.get(pk=request.user.id)
     like = Like(user=user, post=post)
     like.save()
-    return JsonResponse({"message": "Like added successfully!"})
+    
+    return JsonResponse({"message": "Like added successfully!", "likes": post.likes})
 
 def edit(request, post_id):
     if request.method == "POST":

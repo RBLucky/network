@@ -269,13 +269,8 @@
                 {% endif %}
             {% endif %}
            
-            <span class="likes-count">
-                {% if post.likes is not None %}
-                    {{ post.likes }}
-                {% else %}
-                    0
-                {% endif %}
-                Likes
+            <span id="likes-count-{{ post.id }}" class="likes-count">
+                {{ post.likes }} Likes
             </span>
         </div>
     </div>
@@ -463,6 +458,7 @@
 
     function likeHandler(id, likedPosts) {
         const btn = document.getElementById(`${id}`);
+        const likesCountSpan = document.getElementById(`likes-count-${id}`);
 
         btn.innerHTML = '';
 
@@ -477,6 +473,9 @@
             .then(response => response.json)
             .then(result => {
                 btn.innerHTML = `<i class="fa fa-heart-o"></i>`;
+                if (result.likes !== undefined) {
+                    likesCountSpan.textContent = `${result.likes} Likes`;
+                }
                 location.reload(true);
             })
         } else {
@@ -484,6 +483,9 @@
             .then(response => response.json)
             .then(result => {
                 btn.innerHTML = `<i class="fa fa-heart-o" style="color:red">`;
+                if (result.likes !== undefined) {
+                    likesCountSpan.textContent = `${result.likes} Likes`;
+                }
                 location.reload(true);
             })
         }
