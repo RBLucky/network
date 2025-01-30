@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.core.paginator import Paginator
 import json
 from django.http import JsonResponse
-from .models import User, Post, Follow
+from .models import User, Post, Follow, Like
 
 
 def edit(request, post_id):
@@ -23,6 +23,8 @@ def index(request):
     paginator = Paginator(posts, 10)
     pageNum = request.GET.get('page')
     postsInPage = paginator.get_page(pageNum)
+
+    
 
     return render(request, "network/index.html", {
         "postsInPage": postsInPage
