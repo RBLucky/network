@@ -24,10 +24,20 @@ def index(request):
     pageNum = request.GET.get('page')
     postsInPage = paginator.get_page(pageNum)
 
-    
+    likes = Like.objects.all()
+
+    likedPosts = []
+
+    try:
+        for like in likes:
+            if like.user.id == request.user.id:
+                likedPosts.append(like.post.id)
+    except:
+        likedPosts = []
 
     return render(request, "network/index.html", {
-        "postsInPage": postsInPage
+        "postsInPage": postsInPage,
+        "likedPosts": likedPosts
     })
 
 def newPost(request):
