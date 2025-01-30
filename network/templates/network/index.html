@@ -259,9 +259,13 @@
                     >Edit</button>
                 </div>
                 {% else %}
-                <button class="like-button" data-post-id="{{ post.id }}">
-                    Like
-                </button>
+                    {% if post.id in likedPosts %}
+                        <a id="{{ post.id }}" href="" onclick="likeHandler('{{ post.id }}', '{{ likedPosts }}')"><i class="fa fa-heart-o" style="color:red"></i></a>
+                    {% else %}
+                        <button class="like-button" data-post-id="{{ post.id }}" onclick="likeHandler('{{ post.id }}', '{{ likedPosts }}')">
+                            <i class="fa fa-heart-o"></i>
+                        </button>
+                    {% endif %}
                 {% endif %}
             {% endif %}
            
@@ -455,5 +459,19 @@
     document.querySelector('.btn-secondary').addEventListener('click', function() {
         $('#editPostModal').modal('hide');
     });
+
+    function likeHandler(id, likedPosts) {
+        if (likedPosts.indexOf(id) >= 0) {
+            var liked = true;
+        } else {
+            var liked = false;
+        }
+
+        if (liked) {
+            
+        } else {
+
+        }
+    }
 </script>
 {% endblock %}
