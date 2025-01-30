@@ -251,7 +251,7 @@
         
         <div class="post-footer">
             {% if user.is_authenticated %}
-                {% if user == post.user %}
+                {% if user.id == post.user.id %}
                 <div>
                     <button 
                         class="like-button edit-post-btn" 
@@ -282,8 +282,7 @@
     {% endfor %}
 </div>
 
-{% for post in postsInPage %}
-<!-- Single Modal Template -->
+<!-- Single Modal for Editing -->
 <div class="modal fade" id="editPostModal" tabindex="-1" role="dialog">
     <div class="modal-dialog" role="document">
         <div class="modal-content">
@@ -291,20 +290,17 @@
                 <h5 class="modal-title">Edit Post</h5>
                 <button type="button" class="close" data-dismiss="modal">&times;</button>
             </div>
-            <form id="editPostForm">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <textarea class="form-control" name="content" id="editPostContent" rows="3"></textarea>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    <button type="submit" class="btn btn-primary" onclick="submitHandler('{{ post.id }}')">Save changes</button>
-                </div>
-            </form>
+            <div class="modal-body">
+                <textarea class="form-control" id="editPostContent" rows="3"></textarea>
+                <input type="hidden" id="editPostId" value="">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" onclick="submitEdit()">Save changes</button>
+            </div>
         </div>
     </div>
 </div>
-{% endfor %}
 
 <nav aria-label="Page navigation">
     <ul class="pagination">
@@ -323,7 +319,7 @@
 </nav>
 
 <script>
-    // Placeholder and textarea script
+    // Placeholder and textarea script remains the same
     const textarea = document.getElementById("postTextarea");
     const button = document.getElementById("postButton");
 
@@ -351,43 +347,113 @@
         }
     });
 
-    // Modal handling script
+    // Updated Modal handling script
     function openEditModal(postId, currentContent) {
-        // Set form action dynamically
-        //const form = document.getElementById('editPostForm');
-        //form.action = `/edit_post/${postId}`;
-        
-        // Populate textarea with current content
-        const contentTextarea = document.getElementById('editPostContent');
-        contentTextarea.value = currentContent;
-        
-        // Manually show modal to avoid potential conflicts
+        document.getElementById('editPostContent').value = currentContent;
+        document.getElementById('editPostId').value = postId;
         $('#editPostModal').modal('show');
     }
 
     function getCookie(name) {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
-
-        if (parts.length == 2) return parts.pop().split(';').shift();
+        if (parts.length === 2) return parts.pop().split(';').shift();
     }
 
-    function submitHandler(id) {
-        const textarea = document.getElementById('editPostContent').value;
-        const content = document.getElementById(`content_${id}`);
-        const modal = document.getElementById(`editPostModal`);
-        console.log(textarea);
-        fetch(`/edit/${id}`, {
-            method: "POST",
-            headers: {"Content-type": "application/json", "X-CSRFToken": getCookie("csrftoken")},
-            body: JSON.stringify({
-                content: textarea
-            })
-        })
-        .then(response => response.json())
-        .then(result => 
-            content.innerHTML = result.data
-        )
+    async function submitEdit() {
+        const postId = document.getElementById('editPostId').value;
+        const content = document.getElementById('editPostContent').value;
+        const contentDisplay = document.getElementById(`content_${postId}`);
+        
+        if (!content.trim()) {
+            alert('Post content cannot be empty');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/edit/${postId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    content: content.trim()
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            
+            if (result.success || result.data) {
+                // Update the content in the DOM
+                contentDisplay.textContent = content.trim();
+                
+                // Close the modal
+                $('#editPostModal').modal('hide');
+                
+                // Optional: Show success message
+                const successAlert = document.createElement('div');
+                successAlert.className = 'alert alert-success';
+                successAlert.style.position = 'fixed';
+                successAlert.style.top = '20px';
+                successAlert.style.left = '50%';
+                successAlert.style.transform = 'translateX(-50%)';
+                successAlert.style.zIndex = '9999';
+                successAlert.style.padding = '10px 20px';
+                successAlert.style.borderRadius = '5px';
+                successAlert.style.backgroundColor = '#d4edda';
+                successAlert.style.border = '1px solid #c3e6cb';
+                successAlert.style.color = '#155724';
+                successAlert.textContent = 'Post updated successfully!';
+                
+                document.body.appendChild(successAlert);
+                
+                // Remove the success message after 3 seconds
+                setTimeout(() => {
+                    successAlert.remove();
+                }, 3000);
+            } else {
+                throw new Error('Update was not successful');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            
+            // Show error message
+            const errorAlert = document.createElement('div');
+            errorAlert.className = 'alert alert-danger';
+            errorAlert.style.position = 'fixed';
+            errorAlert.style.top = '20px';
+            errorAlert.style.left = '50%';
+            errorAlert.style.transform = 'translateX(-50%)';
+            errorAlert.style.zIndex = '9999';
+            errorAlert.style.padding = '10px 20px';
+            errorAlert.style.borderRadius = '5px';
+            errorAlert.style.backgroundColor = '#f8d7da';
+            errorAlert.style.border = '1px solid #f5c6cb';
+            errorAlert.style.color = '#721c24';
+            errorAlert.textContent = 'Failed to update post. Please try again.';
+            
+            document.body.appendChild(errorAlert);
+            
+            // Remove the error message after 3 seconds
+            setTimeout(() => {
+                errorAlert.remove();
+            }, 3000);
+        }
     }
+
+    // Add event listener to close button
+    document.querySelector('.modal .close').addEventListener('click', function() {
+        $('#editPostModal').modal('hide');
+    });
+
+    // Add event listener to secondary close button
+    document.querySelector('.btn-secondary').addEventListener('click', function() {
+        $('#editPostModal').modal('hide');
+    });
 </script>
 {% endblock %}
