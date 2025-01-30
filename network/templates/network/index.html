@@ -262,7 +262,7 @@
                     {% if post.id in likedPosts %}
                         <a id="{{ post.id }}" href="" onclick="likeHandler('{{ post.id }}', '{{ likedPosts }}')"><i class="fa fa-heart-o" style="color:red"></i></a>
                     {% else %}
-                        <button class="like-button" data-post-id="{{ post.id }}" onclick="likeHandler('{{ post.id }}', '{{ likedPosts }}')">
+                        <button id="{{ post.id }}" class="like-button" data-post-id="{{ post.id }}" onclick="likeHandler('{{ post.id }}', '{{ likedPosts }}')">
                             <i class="fa fa-heart-o"></i>
                         </button>
                     {% endif %}
@@ -461,6 +461,10 @@
     });
 
     function likeHandler(id, likedPosts) {
+        const btn = document.getElementById(`${id}`);
+
+        btn.innerHTML = '';
+
         if (likedPosts.indexOf(id) >= 0) {
             var liked = true;
         } else {
@@ -468,10 +472,21 @@
         }
 
         if (liked) {
-            
+            fetch(`/unlike/${id}`)
+            .then(response => response.json)
+            .then(result => {
+                btn.innerHTML = `<i class="fa fa-heart-o"></i>`;
+                location.reload(true);
+            })
         } else {
-
+            fetch(`/like/${id}`)
+            .then(response => response.json)
+            .then(result => {
+                btn.innerHTML = `<i class="fa fa-heart-o" style="color:red">`;
+                location.reload(true);
+            })
         }
+        liked = !liked;
     }
 </script>
 {% endblock %}
